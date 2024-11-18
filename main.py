@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -20,43 +20,46 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-# Endpoint raíz
+# Endpoint raíz que ahora usa un template HTML
 @app.route("/")
 def root():
-    return "root"
+    return render_template("index.html")
 
-# Endpoint para obtener un usuario por ID
-@app.route("/users/<int:user_id>", methods=['GET'])
-def get_user(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return jsonify({"id": user.id, "name": user.name, "telefono": user.telefono}), 200
-    return jsonify({"error": "User not found"}), 404
+# Endpoint para mostrar todos los usuarios (GET)
+@app.route("/users", methods=['GET'])
+def get_users():
+    users = User.query.all()
+    users_list = [{"id": user.id, "name": user.name, "telefono": user.telefono} for user in users]
+    return render_template("users.html", users=users_list)
 
-# Endpoint para crear un usuario
-@app.route('/users', methods=['POST'])
-def create_user():
-    data = request.get_json()
-    new_user = User(name=data['name'], telefono=data['telefono'])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"id": new_user.id, "name": new_user.name, "telefono": new_user.telefono, "status": "user created"}), 201
+# Endpoint para agregar un nuevo usuario (POST)
+@app.route("/users/new", methods=['GET', 'POST'])
+def add_user():
+    if request.method == 'POST':
+        data = request.form
+        new_user = User(name=data['name'], telefono=data['telefono'])
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('get_users'))
+    return render_template("add_user.html")
 
-# Endpoint para actualizar un usuario
-@app.route('/users/<int:user_id>', methods=['PUT'])
-def update_user(user_id):
+# Endpoint para editar un usuario existente (PUT)
+@app.route("/users/edit/<int:user_id>", methods=['GET', 'POST'])
+def edit_user(user_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    data = request.get_json()
-    user.name = data.get("name", user.name)
-    user.telefono = data.get("telefono", user.telefono)
-    db.session.commit()
-    return jsonify({"id": user.id, "name": user.name, "telefono": user.telefono, "status": "user updated"}), 200
+    if request.method == 'POST':
+        data = request.form
+        user.name = data.get("name", user.name)
+        user.telefono = data.get("telefono", user.telefono)
+        db.session.commit()
+        return redirect(url_for('get_users'))
+    return render_template("edit_user.html", user=user)
 
-# Endpoint para borrar un usuario
-@app.route('/users/<int:user_id>', methods=['DELETE'])
+# Endpoint para eliminar un usuario existente (DELETE)
+@app.route("/users/delete/<int:user_id>", methods=['GET'])
 def delete_user(user_id):
     user = User.query.get(user_id)
     if not user:
@@ -64,7 +67,8 @@ def delete_user(user_id):
 
     db.session.delete(user)
     db.session.commit()
-    return jsonify({"id": user.id, "status": "user deleted"}), 200
+    return redirect(url_for('get_users'))
 
 if __name__ == '__main__':
     app.run(debug=True)
+
