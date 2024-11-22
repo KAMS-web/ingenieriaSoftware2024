@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Usuarios</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
 </head>
 <body>
     <h1>Lista de Usuarios</h1>
@@ -18,17 +19,17 @@
             </tr>
         </thead>
         <tbody>
-            {% for user in users %}
+             for user in users 
             <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.name }}</td>
-                <td>{{ user.telefono }}</td>
+                <td> user.id </td>
+                <td> user.name </td>
+                <td> user.telefono </td>
                 <td>
-                    <a href="/users/edit/{{ user.id }}">Editar</a> |
-                    <a href="/users/delete/{{ user.id }}">Eliminar</a>
+                    <a href="/users/edit/ user.id ">Editar</a> |
+                    <a href="/users/delete/ user.id ">Eliminar</a>
                 </td>
             </tr>
-            {% endfor %}
+            { endfor }
         </tbody>
     </table>
 </body>
